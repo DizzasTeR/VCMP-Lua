@@ -71,10 +71,10 @@ int SqLiteDatabase::execPrepare(const std::string& query, sol::table args)
 					statement.bind(pair.first.as<std::string>(), value.as<std::string>());
 				break;
 			case sol::type::number:
-				if (pair.first.is<float>())
-					statement.bind(pair.first.as<float>(), value.as<float>());
+				if (pair.first.is<int>()) 
+					statement.bind(pair.first.as<int>(), value.as<double>());
 				else
-					statement.bind(pair.first.as<std::string>(), value.as<float>());
+					statement.bind(pair.first.as<std::string>(), value.as<double>());
 				break;
 			case sol::type::nil:
 			default:
@@ -139,10 +139,10 @@ std::variant<bool, sol::table> SqLiteDatabase::queryPrepare(const std::string& q
 					statement.bind(pair.first.as<std::string>(), value.as<std::string>());
 				break;
 			case sol::type::number:
-				if (pair.first.is<float>())
-					statement.bind(pair.first.as<float>(), value.as<float>());
+				if (pair.first.is<int>())
+					statement.bind(pair.first.as<int>(), value.as<double>());
 				else
-					statement.bind(pair.first.as<std::string>(), value.as<float>());
+					statement.bind(pair.first.as<std::string>(), value.as<double>());
 				break;
 			case sol::type::nil:
 			default:

@@ -39,16 +39,31 @@ sol::table Player::getActive(bool spawned)
 	return entities;
 }
 
+std::string Player::sanitize(const std::string& text) {
+    std::string safe = text;
+    size_t pos = 0;
+    while ((pos = safe.find("%", pos)) != std::string::npos) {
+        safe.replace(pos, 1, "%%");
+        pos += 2;
+    }
+    return safe;
+}
+
 void Player::msgAll(const std::string& msg, sol::variadic_args args)
 {
-	for (auto& player : s_Players)
-		player.msg(msg, args);
+    std::string safeMsg = Player::sanitize(msg);
+    int32_t color = args.size() > 0 ? args[0].as<int32_t>() : 0xFFFFFFFF;
+    for (auto& player : s_Players)
+        g_Funcs->SendClientMessage(player.getID(), color, safeMsg.c_str());
 }
 
 void Player::announceAll(const std::string& msg, sol::variadic_args args) 
 {
-	for(auto& player : s_Players)
-		player.announce(msg, args);
+    std::string safeMsg = Player::sanitize(msg); 
+    for(auto& player : s_Players)
+    {
+        player.announce(safeMsg, args);
+    }
 }
 
 Player::Player(int32_t id)
@@ -59,14 +74,18 @@ Player::Player(int32_t id)
 
 /*** METHODS ***/
 void Player::msg(const std::string& msg, sol::variadic_args args) {
-	int32_t color = args.size() > 0 ? args[0] : 0xFFFFFFFF;
-	g_Funcs->SendClientMessage(m_ID, color, msg.c_str());
+    std::string safeMsg = Player::sanitize(msg); 
+    
+    int32_t color = args.size() > 0 ? args[0].as<int32_t>() : 0xFFFFFFFF;
+    g_Funcs->SendClientMessage(m_ID, color, safeMsg.c_str());
 }
 
 void Player::announce(const std::string& msg, sol::variadic_args args) 
 {
-	int32_t type = args.size() > 0 ? args[0] : 0;
-	g_Funcs->SendGameMessage(m_ID, type, msg.c_str());
+    std::string safeMsg = Player::sanitize(msg);
+    
+    int32_t type = args.size() > 0 ? args[0].as<int32_t>() : 0;
+    g_Funcs->SendGameMessage(m_ID, type, safeMsg.c_str());
 }
 
 int32_t Player::getAlpha() const {

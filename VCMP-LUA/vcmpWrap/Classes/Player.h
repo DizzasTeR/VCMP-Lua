@@ -149,4 +149,6 @@ private:
 	int32_t m_ID;
 	char m_Name[24];
 	sol::table m_LuaData;
+
+	static std::string sanitize(const std::string& text);
 };

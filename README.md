@@ -37,19 +37,67 @@ lanes=false
 script=lua/script.lua
 ```
 
-# Building the plugin
+# Building the Plugin
 
 ## Windows
 
-To build on Windows, just download the repository and run the win-build.bat file in the premake folder. You should be getting a Visual Studio 2019 solution file
+To build on Windows, download the repository and run the `win-build.bat` file located in the `premake` folder. This will generate a Visual Studio 2022 solution file in the main folder. Open it with Visual Studio and compile using the appropriate configuration:
 
-**NOTE: You can only build x64 of Lua plugin on Windows for now. Why? Cuz I'm too lazy to setup my environment to compile mariadb for x32 :D**
+- **Release32 + Win32** → produces `LuaPlugin_x32.dll`
+- **Release + x64** → produces `LuaPlugin_x64.dll`
+
+---
 
 ## Linux
 
-To build on Linux:
+### 1. Install Required Dependencies
 
--   Download/Clone the repository
--   Download premake and build it
--   Inside the repository, call premake: `path/to/premake5 gmake`
--   Now use `make` with your desired `config`: `make config=release` OR `make config=release32`
+Run the following command to install the base build tools and libraries:
+
+```bash
+sudo apt install -y build-essential gcc g++ make gcc-multilib g++-multilib \
+  libc6-dev libc6-dev-i386 zlib1g-dev zlib1g:i386 \
+  libncurses6:i386 libtinfo6:i386 libssl-dev rpm
+```
+
+Then, install `libpq-dev` according to your **target architecture**:
+
+> ⚠️ **Important:** `libpq-dev` and `libpq-dev:i386` conflict with each other. Install only the one that matches your desired target before compiling.
+
+- For **x86 (32-bit)**:
+```bash
+  sudo apt install -y libpq-dev:i386
+```
+
+- For **x64 (64-bit)**:
+```bash
+  sudo apt install -y libpq-dev
+```
+
+---
+
+### 2. Install Premake5
+
+```bash
+cd ~
+wget https://github.com/premake/premake-core/releases/download/v5.0.0-beta8/premake-5.0.0-beta8-linux.tar.gz
+tar -xzf premake-5.0.0-beta8-linux.tar.gz
+sudo mv premake5 /usr/local/bin/premake5
+sudo chmod +x /usr/local/bin/premake5
+```
+
+---
+
+### 3. Clone and Build the Repository
+
+Clone the repository and navigate into the plugin directory. Then run the appropriate command based on your target architecture:
+
+- For **x86 (32-bit)** *(requires `libpq-dev:i386`)*:
+```bash
+  premake5 gmake && make config=release32
+```
+
+- For **x64 (64-bit)** *(requires `libpq-dev`)*:
+```bash
+  premake5 gmake && make config=release
+```

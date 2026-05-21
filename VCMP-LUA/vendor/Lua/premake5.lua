@@ -12,4 +12,9 @@ project "Lua"
 		"**.h",
 		"**.c"
 	}
- 
+
+	removefiles
+	{
+		"lua.c",
+		"luac.c"
+	}

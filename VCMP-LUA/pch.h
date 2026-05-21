@@ -21,6 +21,7 @@
 
 #define SOL_ALL_SAFETIES_ON 1
 
+#include <limits>
 #include <sol/sol.hpp>
 
 extern "C" 
@@ -28,10 +29,8 @@ extern "C"
 	#include <lanes.h>
 }
 
-#include <mariadb++/connection.hpp>
-
-#ifdef WIN32
-#include <Windows.h>
+#ifdef _WIN32
+    #include <Windows.h>
 #endif
 
 #endif //PCH_H

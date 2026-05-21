@@ -704,8 +704,16 @@ void RegisterVCMPCallbacks() {
 		uint8_t ret = 1;
 		try {
 			Player* player = Player::Get(playerId);
+
+			std::string rawData(message);
+			std::string safeMessage;
+			for (char c : rawData) {
+				if (c == '%') safeMessage += "%%";
+				else safeMessage += c;
+			}
+
 			for (auto fn : handlers) {
-				sol::function_result r = fn(player, message);
+				sol::function_result r = fn(player, safeMessage);
 				if (!r.valid()) {
 					sol::error e = r;
 					spdlog::error("Event callback error: {}", e.what());
@@ -736,7 +744,17 @@ void RegisterVCMPCallbacks() {
 				throw("Critical failure");
 				return 0;
 			}
-			std::string data(message);
+
+			// ----------------------------------------------------
+			std::string rawData(message);
+			std::string data;
+			// Escape all '%' to '%%' before splitting, because '%' is used for string formatting in Lua and can cause issues if not escaped
+			for (char c : rawData) {
+				if (c == '%') data += "%%";
+				else data += c;
+			}
+			// ----------------------------------------------------
+
 			std::vector<std::string> args = std::split(data, ' ');
 			std::string command;
 			if (args.size() > 0)
@@ -800,8 +818,16 @@ void RegisterVCMPCallbacks() {
 		try {
 			Player* player = Player::Get(playerId);
 			Player* targetPlayer = Player::Get(targetPlayerId);
+
+			std::string rawData(message);
+			std::string safeMessage;
+			for (char c : rawData) {
+				if (c == '%') safeMessage += "%%";
+				else safeMessage += c;
+			}
+
 			for (auto fn : handlers) {
-				sol::function_result r = fn(player, targetPlayer, message);
+				sol::function_result r = fn(player, targetPlayer, safeMessage);
 				if (!r.valid()) {
 					sol::error e = r;
 					spdlog::error("Event callback error: {}", e.what());

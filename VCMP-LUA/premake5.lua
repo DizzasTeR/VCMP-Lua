@@ -1,78 +1,92 @@
 project "LuaPlugin"
-	kind "SharedLib"
-	language "C++"
-	cppdialect "C++17"
-	pic "On"
+    kind "SharedLib"
+    language "C++"
+    cppdialect "C++17"
+    staticruntime "on"
+    pic "On"
 
-	targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
-    objdir ("%{wks.location}/bin/interm/" .. outputdir .. "/%{prj.name}")
-    
-	files
-	{
-		"pch.h",
+    targetdir ("../bin/" .. outputdir .. "/%{prj.name}")
+    objdir ("../bin/interm/" .. outputdir .. "/%{prj.name}")
+
+    files
+    {
+        "pch.h",
         "pch.cpp",
         "Core.cpp",
-
         "include/**.h",
         "include/**.c",
-        
         "vcmpWrap/**.h",
-		"vcmpWrap/**.cpp",
+        "vcmpWrap/**.cpp",
+        "modules/crypto/vcmpWrap/**.h",
+        "modules/crypto/vcmpWrap/**.cpp",
     }
-    
-	includedirs
-	{
-		"%{wks.location}/VCMP-LUA/",
-		"%{wks.location}/VCMP-LUA/include",
-		"%{wks.location}/VCMP-LUA/vcmpWrap",
-		"%{wks.location}/VCMP-LUA/vendor",
-		"%{wks.location}/VCMP-LUA/vendor/Lua",
-		"%{wks.location}/VCMP-LUA/vendor/sol",
-		"%{wks.location}/VCMP-LUA/vendor/spdlog/include",
-		"%{wks.location}/VCMP-LUA/vendor/asyncplusplus/include",
-		"%{wks.location}/VCMP-LUA/vendor/lanes/src",
-	}
 
-	-- Module(s) files and dirs
-	files
-	{
-		-- crypto
-		"modules/crypto/vcmpWrap/**.h",
-		"modules/crypto/vcmpWrap/**.cpp",
-	}
+    includedirs
+    {
+        "./",
+        "include",
+        "vcmpWrap",
+        "vendor", 
+        "vendor/Lua",
+        "vendor/sol",
+        "vendor/spdlog/include",
+        "vendor/asyncplusplus/include",
+        "vendor/lanes/src",
+        "modules/sqlite3/sqliteCpp/include",
+        "modules/requests/cpr/include",
+        "modules/postgresql/include"
+    }
 
-	includedirs
-	{
-		-- sqlite
-		"modules/sqlite3/sqliteCpp/include",
-		-- cpr
-		"modules/requests/cpr/include"
-	}
-	--
+    defines { 
+        "LIBASYNC_STATIC"
+    }
 
-	defines { "LIBASYNC_STATIC" }
+    filter "system:windows"
 
-	filter {}
-		internalLinks = { "spdlog", "Lua", "asyncplusplus", "LuaLanes" }
-		-- Links external modules
-		externalLinks = { "module-crypto", "module-sqliteCpp", "module-cpr" }
-		
-		local linksTbl = table.join(internalLinks, externalLinks)
-		links(linksTbl)
+        defines {
+            "WIN32",
+            "CURL_STATICLIB",
+            "ZLIB_WINAPI",
+            "WIN32_LEAN_AND_MEAN",
+            "NOMINMAX"
+        }
 
-	-- Specify internal modules (Not project based)
-	include "modules/mariadb"
+        systemversion "latest"
 
-	filter "system:windows"
-		systemversion "latest"
-		defines { "WIN32" }
-	  
-	filter "configurations:Debug"
-		defines {"_DEBUG"}
-		runtime "Debug"
-		symbols "on"
+        linkoptions {
+            "/FORCE:MULTIPLE",
+            "/alternatename:__imp_rand=rand",
+            "/alternatename:__imp__rmdir=_rmdir"
+        }
+        
+        libdirs { 
+            "modules/postgresql/lib/%{cfg.architecture}-windows-static",
+            "modules/requests/cpr/lib/%{cfg.architecture}-windows-static",
+            "modules/sqlite3/sqliteCpp/lib/%{cfg.architecture}-windows-static"
+        }
+        
+        links { 
+            "spdlog", "Lua", "asyncplusplus", "LuaLanes", "module-crypto",
+            "module-cpr", "module-sqliteCpp",
+            "pq", "pgcommon", "pgport",
+            "libcrypto", "libssl",
+            "Ws2_32", "Secur32", "Advapi32", "Crypt32", "Wldap32", "Shell32", "Normaliz", "Iphlpapi" 
+        }
 
-	filter "configurations:Release"
-		defines {"_RELEASE"}
-		runtime "Release"
-		optimize "on"
+    filter { "system:windows", "configurations:Release*" }
+        links { "zs" } 
+
+    filter { "system:windows", "configurations:Debug*" }
+        links { "zsd" }
+
+    filter "system:linux"
+        buildoptions { "-fpermissive" }
+        links { "pq", "module-cpr", "module-sqliteCpp", "ssl", "crypto", "pthread", "dl", "m" }
+
+    filter "configurations:Debug"
+        defines {"_DEBUG"}
+        symbols "on"
+
+    filter "configurations:Release*"
+        defines {"_RELEASE"}
+        optimize "on"
